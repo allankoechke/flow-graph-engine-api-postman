@@ -1,0 +1,1006 @@
+{
+	"info": {
+		"_postman_id": "5e6af1ac-187a-4646-b937-b4983024d5b0",
+		"name": "Generic FGE Task Copy",
+		"description": "<img src=\"https://content.pstmn.io/1e7bd3f0-d563-4e49-99a7-a9daf953f3e1/aW1hZ2UucG5n\" alt=\"\" height=\"887\" width=\"1812\">\n\nThis sample app let you scatter trees on a given object using the Flow Graph Engine API. To do so, this sample use the bifrost executor to execute the provided bifrost graph. This what the graph looks like when loaded in Maya.\n\n[https://github.com/autodesk-platform-services/aps-flowgraphengine-bifrost-js-sample](https://github.com/autodesk-platform-services/aps-flowgraphengine-bifrost-js-sample)",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_uid": "19069879-5e6af1ac-187a-4646-b937-b4983024d5b0"
+	},
+	"item": [
+		{
+			"name": "01. Authentication",
+			"item": [
+				{
+					"name": "01. APS Authentication",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "d7055e65-f851-4203-9668-4961c0332b78",
+								"exec": [
+									"const resp = JSON.parse(pm.response.text());\r",
+									"if(pm.response.code === 200) {\r",
+									"    pm.environment.set(\"APS_ACCESS_TOKEN\", resp.access_token);\r",
+									"}"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"id": "56f683a0-da19-47f0-9e80-3151a5b0cc66",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "urlencoded",
+							"urlencoded": [
+								{
+									"key": "scope",
+									"value": "data:read data:create data:write code:all",
+									"type": "text",
+									"uuid": "54fb1034-6b73-49ed-ae43-198e8afa9772"
+								},
+								{
+									"key": "grant_type",
+									"value": "client_credentials",
+									"type": "text",
+									"uuid": "9f45baf6-a05c-47d3-a9ef-cdd6802b33ba"
+								},
+								{
+									"key": "client_id",
+									"value": "{{APS_CLIENT_ID}}",
+									"type": "text",
+									"uuid": "ec062b0a-8ec4-4f97-8f62-726084ac6b31"
+								},
+								{
+									"key": "client_secret",
+									"value": "{{APS_CLIENT_SECRET}}",
+									"type": "text",
+									"uuid": "38eb6d7b-2e7c-4331-85fc-688ee19b190d"
+								}
+							]
+						},
+						"url": {
+							"raw": "https://developer.api.autodesk.com/authentication/v2/token",
+							"protocol": "https",
+							"host": [
+								"developer",
+								"api",
+								"autodesk",
+								"com"
+							],
+							"path": [
+								"authentication",
+								"v2",
+								"token"
+							]
+						}
+					},
+					"response": []
+				}
+			],
+			"id": "d70fccde-c9f1-4dfd-9ce5-3cf6715c1b74"
+		},
+		{
+			"name": "02. Uploading Resources",
+			"item": [
+				{
+					"name": "01. Upload Input File",
+					"item": [
+						{
+							"name": "01. Get Resource Upload Url",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"id": "953067b9-2c52-4c0b-b735-368b4cd199b3",
+										"exec": [
+											"const resp = pm.response.json();\r",
+											"console.log(resp)\r",
+											"if(pm.response.code === 200) {\r",
+											"    pm.collectionVariables.set(\"inputFileUploadUrl\", resp.urls[0].url);\r",
+											"    pm.collectionVariables.set(\"inputFileUploadResourceId\", resp.upload.resourceId);\r",
+											"    pm.collectionVariables.set(\"inputFileUploadId\", resp.upload.id);\r",
+											"}"
+										],
+										"type": "text/javascript",
+										"packages": {}
+									}
+								}
+							],
+							"id": "0f3c1022-247b-4f4e-8ca2-084eeece86d3",
+							"protocolProfileBehavior": {
+								"disableBodyPruning": true
+							},
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{APS_ACCESS_TOKEN}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "https://developer.api.autodesk.com/flow/storage/v1/spaces/{{storageSpaceId}}/resources/{{inputFileResourceId}}/upload-urls",
+									"protocol": "https",
+									"host": [
+										"developer",
+										"api",
+										"autodesk",
+										"com"
+									],
+									"path": [
+										"flow",
+										"storage",
+										"v1",
+										"spaces",
+										"{{storageSpaceId}}",
+										"resources",
+										"{{inputFileResourceId}}",
+										"upload-urls"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "02. Upload To Signed Url",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"id": "c0a42454-cee2-4d6f-a3d5-f99ce3e6582b",
+										"exec": [
+											"if(pm.response.code === 200) {\r",
+											"    console.log(pm.response.headers)\r",
+											"    pm.collectionVariables.set(\"inputFileEtag\", pm.response.headers.get(\"ETag\"));\r",
+											"}"
+										],
+										"type": "text/javascript",
+										"packages": {}
+									}
+								}
+							],
+							"id": "855a96a6-0788-406d-a9d5-d32368e5dec1",
+							"protocolProfileBehavior": {
+								"disableBodyPruning": true
+							},
+							"request": {
+								"auth": {
+									"type": "noauth"
+								},
+								"method": "PUT",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/octet-stream",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "file",
+									"file": {}
+								},
+								"url": {
+									"raw": "{{inputFileUploadUrl}}",
+									"host": [
+										"{{inputFileUploadUrl}}"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "03. Complete Upload",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"id": "aca13789-ff1f-4543-9fb5-55db72adbd78",
+										"exec": [
+											"const resp = pm.response.json();\r",
+											"if(pm.response.code === 200) {\r",
+											"    pm.collectionVariables.set(\"inputFileUrn\", resp.urn);\r",
+											"}"
+										],
+										"type": "text/javascript",
+										"packages": {}
+									}
+								}
+							],
+							"id": "faf38bbf-d406-4d70-b5a3-bc4daf99b4c5",
+							"protocolProfileBehavior": {
+								"disableBodyPruning": true
+							},
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{APS_ACCESS_TOKEN}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"resourceId\": \"{{inputFileUploadResourceId}}\",\r\n    \"uploadId\": \"{{inputFileUploadId}}\",\r\n    \"parts\": [\r\n        {\r\n            \"partId\": 1,\r\n            \"etag\": {{inputFileEtag}}\r\n        }\r\n    ]\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "https://developer.api.autodesk.com/flow/storage/v1/spaces/{{storageSpaceId}}/uploads:complete",
+									"protocol": "https",
+									"host": [
+										"developer",
+										"api",
+										"autodesk",
+										"com"
+									],
+									"path": [
+										"flow",
+										"storage",
+										"v1",
+										"spaces",
+										"{{storageSpaceId}}",
+										"uploads:complete"
+									]
+								}
+							},
+							"response": []
+						}
+					],
+					"id": "e63c54ed-7f23-4dea-b173-92b749fbf291"
+				},
+				{
+					"name": "02. Upload Bifrost Graph",
+					"item": [
+						{
+							"name": "01. Get Resource Upload Url",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"id": "953067b9-2c52-4c0b-b735-368b4cd199b3",
+										"exec": [
+											"const resp = pm.response.json();\r",
+											"console.log(resp)\r",
+											"if(pm.response.code === 200) {\r",
+											"    pm.collectionVariables.set(\"inputBifrostGraphUploadUrl\", resp.urls[0].url);\r",
+											"    pm.collectionVariables.set(\"inputBifrostGraphUploadResourceId\", resp.upload.resourceId);\r",
+											"    pm.collectionVariables.set(\"inputBifrostGraphUploadId\", resp.upload.id);\r",
+											"}"
+										],
+										"type": "text/javascript",
+										"packages": {}
+									}
+								}
+							],
+							"id": "8ed8b0e2-74d2-4d9f-809c-30b7e7920c5a",
+							"protocolProfileBehavior": {
+								"disableBodyPruning": true
+							},
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{APS_ACCESS_TOKEN}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "https://developer.api.autodesk.com/flow/storage/v1/spaces/{{storageSpaceId}}/resources/{{resourceId}}/upload-urls",
+									"protocol": "https",
+									"host": [
+										"developer",
+										"api",
+										"autodesk",
+										"com"
+									],
+									"path": [
+										"flow",
+										"storage",
+										"v1",
+										"spaces",
+										"{{storageSpaceId}}",
+										"resources",
+										"{{resourceId}}",
+										"upload-urls"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "02. Upload To Signed Url",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"id": "c0a42454-cee2-4d6f-a3d5-f99ce3e6582b",
+										"exec": [
+											"if(pm.response.code === 200) {\r",
+											"    console.log(pm.response.headers)\r",
+											"    pm.collectionVariables.set(\"inputBifrostGraphEtag\", pm.response.headers.get(\"ETag\"));\r",
+											"}"
+										],
+										"type": "text/javascript",
+										"packages": {}
+									}
+								}
+							],
+							"id": "13fbed53-a022-4ff3-ad12-f856677ce872",
+							"protocolProfileBehavior": {
+								"disableBodyPruning": true
+							},
+							"request": {
+								"auth": {
+									"type": "noauth"
+								},
+								"method": "PUT",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/octet-stream",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "file",
+									"file": {}
+								},
+								"url": {
+									"raw": "{{inputBifrostGraphUploadUrl}}",
+									"host": [
+										"{{inputBifrostGraphUploadUrl}}"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "03. Complete Upload",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"id": "aca13789-ff1f-4543-9fb5-55db72adbd78",
+										"exec": [
+											"const resp = pm.response.json();\r",
+											"if(pm.response.code === 200) {\r",
+											"    pm.collectionVariables.set(\"inputBifrostGraphUrn\", resp.urn);\r",
+											"}"
+										],
+										"type": "text/javascript",
+										"packages": {}
+									}
+								}
+							],
+							"id": "e7b7f736-7dd2-4e5b-8b5f-9858f7cd47f0",
+							"protocolProfileBehavior": {
+								"disableBodyPruning": true
+							},
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{APS_ACCESS_TOKEN}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"resourceId\": \"{{inputBifrostGraphUploadResourceId}}\",\r\n    \"uploadId\": \"{{inputBifrostGraphUploadId}}\",\r\n    \"parts\": [\r\n        {\r\n            \"partId\": 1,\r\n            \"etag\": {{inputBifrostGraphEtag}}\r\n        }\r\n    ]\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "https://developer.api.autodesk.com/flow/storage/v1/spaces/{{storageSpaceId}}/uploads:complete",
+									"protocol": "https",
+									"host": [
+										"developer",
+										"api",
+										"autodesk",
+										"com"
+									],
+									"path": [
+										"flow",
+										"storage",
+										"v1",
+										"spaces",
+										"{{storageSpaceId}}",
+										"uploads:complete"
+									]
+								}
+							},
+							"response": []
+						}
+					],
+					"id": "e9e47ea7-9092-4841-8c09-fcb99f2dfa1a"
+				}
+			],
+			"id": "42f9b6db-d13f-46e1-bbb3-85379ad558a9"
+		},
+		{
+			"name": "03. Submitting a Job",
+			"item": [
+				{
+					"name": "01. Submit a Job",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "5030435e-8a9d-45ef-8792-b9ce0eee6dd0",
+								"exec": [
+									"const resp = pm.response.json();\r",
+									"if(pm.response.code === 201) {\r",
+									"    pm.collectionVariables.set(\"jobId\", resp.id);\r",
+									"}"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"id": "266e7ab4-ef0f-4070-a0a3-855f2ca5aa19",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{APS_ACCESS_TOKEN}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"name\": \"{{jobName}}\",\r\n  \"tags\": [\"sample app\"],\r\n  \"tasks\": [\r\n    {\r\n      \"name\": \"execute bifrost graph\",\r\n      \"type\": \"task\",\r\n      \"executor\": \"bifrost\",\r\n      \"inputs\": [],\r\n      \"limitations\": {\r\n        \"maxExecutionTimeInSeconds\": 600\r\n      },\r\n      \"payload\": {\r\n        \"action\": \"Evaluate\",\r\n        \"options\": {\r\n          \"compound\": \"{{compoundName}}\",\r\n          \"frames\": {\r\n            \"start\": {{startFrame}},\r\n            \"end\": {{endFrame}}\r\n          },\r\n          \"bifrostVersion\": \"{{bifrostVersion}}\"\r\n        },\r\n        \"definitionFiles\": [\r\n          {\r\n            \"source\": {\r\n              \"uri\": \"{{inputBifrostGraphUrn}}\"\r\n            },\r\n            \"target\": {\r\n              \"path\": \"bifrostgraph.json\"\r\n            }\r\n          }\r\n        ],\r\n        \"ports\": {\r\n          \"inputPorts\": [\r\n            {\r\n              \"name\": \"filename\",\r\n              \"value\": \"{{inputFileName}}\",\r\n              \"type\": \"string\"\r\n            }\r\n          ]\r\n        },\r\n        \"executions\": [\r\n          {\r\n            \"outputs\": [\r\n              {\r\n                \"source\": {\r\n                  \"path\": \"{{outputFileName}}\"\r\n                },\r\n                \"target\": {\r\n                  \"name\": \"{{outputFileName}}\"\r\n                }\r\n              }\r\n            ],\r\n            \"templateRange\": {\r\n                \"start\": \"{{startFrame}}\",\r\n                \"end\": \"{{endFrame}}\"\r\n            },\r\n            \"frameId\": \"{executionId}\"\r\n          }\r\n        ]\r\n      },\r\n      \"requirements\": {\r\n        \"cpu\": 16,\r\n        \"memory\": 30720\r\n      }\r\n    }\r\n  ]\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://developer.api.autodesk.com/flow/compute/v1/queues/{{queueId}}/jobs",
+							"protocol": "https",
+							"host": [
+								"developer",
+								"api",
+								"autodesk",
+								"com"
+							],
+							"path": [
+								"flow",
+								"compute",
+								"v1",
+								"queues",
+								"{{queueId}}",
+								"jobs"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "02. Fetch Job Status",
+					"id": "7cb6a0de-7f8a-46bd-9b18-7eaf6c75ed01",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{APS_ACCESS_TOKEN}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "https://developer.api.autodesk.com/flow/compute/v1/queues/{{queueId}}/jobs/{{jobId}}",
+							"protocol": "https",
+							"host": [
+								"developer",
+								"api",
+								"autodesk",
+								"com"
+							],
+							"path": [
+								"flow",
+								"compute",
+								"v1",
+								"queues",
+								"{{queueId}}",
+								"jobs",
+								"{{jobId}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "03. Get Task Executions",
+					"id": "e941c1e6-2cfc-459f-a093-7f5e525b2f0f",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{APS_ACCESS_TOKEN}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "https://developer.api.autodesk.com/flow/compute/v1/queues/{{queueId}}/jobs/{{jobId}}/executions",
+							"protocol": "https",
+							"host": [
+								"developer",
+								"api",
+								"autodesk",
+								"com"
+							],
+							"path": [
+								"flow",
+								"compute",
+								"v1",
+								"queues",
+								"{{queueId}}",
+								"jobs",
+								"{{jobId}}",
+								"executions"
+							]
+						}
+					},
+					"response": []
+				}
+			],
+			"id": "875f4ea4-a14b-4d35-841b-01532ad5b68e"
+		},
+		{
+			"name": "04. Job Logs",
+			"item": [
+				{
+					"name": "01. Get Logs",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "5030435e-8a9d-45ef-8792-b9ce0eee6dd0",
+								"exec": [
+									"const resp = pm.response.json();\r",
+									"if (pm.response.code === 200 && resp.results.length > 0) {\r",
+									"    pm.collectionVariables.set(\"logSpaceId\", resp.results[0].spaceId);\r",
+									"    pm.collectionVariables.set(\"logResourceId\", resp.results[0].resourceId);\r",
+									"}"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"id": "e9ed3af5-0d1e-46be-9d0a-4b5062efa285",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{APS_ACCESS_TOKEN}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "https://developer.api.autodesk.com/flow/compute/v1/queues/{{queueId}}/jobs/{{jobId}}/logs",
+							"protocol": "https",
+							"host": [
+								"developer",
+								"api",
+								"autodesk",
+								"com"
+							],
+							"path": [
+								"flow",
+								"compute",
+								"v1",
+								"queues",
+								"{{queueId}}",
+								"jobs",
+								"{{jobId}}",
+								"logs"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "02. Get Download URL",
+					"id": "99473eff-7924-4d15-a91d-3fb4934574f1",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{APS_ACCESS_TOKEN}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "https://developer.api.autodesk.com/flow/storage/v1/spaces/{{logSpaceId}}/resources/{{logResourceId}}/download-url",
+							"protocol": "https",
+							"host": [
+								"developer",
+								"api",
+								"autodesk",
+								"com"
+							],
+							"path": [
+								"flow",
+								"storage",
+								"v1",
+								"spaces",
+								"{{logSpaceId}}",
+								"resources",
+								"{{logResourceId}}",
+								"download-url"
+							]
+						}
+					},
+					"response": []
+				}
+			],
+			"id": "4a50ec39-4e8b-4153-b12e-2436bcf4f695"
+		},
+		{
+			"name": "05. Job Outputs",
+			"item": [
+				{
+					"name": "01. Get Outputs",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "2aff146c-9ad2-404e-aae0-355ca1134146",
+								"exec": [
+									"const resp = pm.response.json();\r",
+									"if (pm.response.code === 200 && resp.results.length > 0) {\r",
+									"    pm.collectionVariables.set(\"outputSpaceId\", resp.results[0].spaceId);\r",
+									"    pm.collectionVariables.set(\"outputResourceId\", resp.results[0].resourceId);\r",
+									"}"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"id": "56365fc1-358b-4e22-a77e-d21546c2d55c",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{APS_ACCESS_TOKEN}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "https://developer.api.autodesk.com/flow/compute/v1/queues/{{queueId}}/jobs/{{jobId}}/outputs",
+							"protocol": "https",
+							"host": [
+								"developer",
+								"api",
+								"autodesk",
+								"com"
+							],
+							"path": [
+								"flow",
+								"compute",
+								"v1",
+								"queues",
+								"{{queueId}}",
+								"jobs",
+								"{{jobId}}",
+								"outputs"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "02. Get Download URLs",
+					"id": "acdd4a0a-9df2-4d3d-a7c9-d96001908124",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{APS_ACCESS_TOKEN}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "https://developer.api.autodesk.com/flow/storage/v1/spaces/{{outputSpaceId}}/resources/{{outputResourceId}}/download-url",
+							"protocol": "https",
+							"host": [
+								"developer",
+								"api",
+								"autodesk",
+								"com"
+							],
+							"path": [
+								"flow",
+								"storage",
+								"v1",
+								"spaces",
+								"{{outputSpaceId}}",
+								"resources",
+								"{{outputResourceId}}",
+								"download-url"
+							]
+						}
+					},
+					"response": []
+				}
+			],
+			"id": "19269505-5be6-4c6b-8ef7-1102738ea660"
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"id": "b543189c-881a-496d-b823-78899ca0d452",
+				"type": "text/javascript",
+				"packages": {},
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"id": "66f8cfa6-5346-43ab-81c1-9effa9f5ecdd",
+				"type": "text/javascript",
+				"packages": {},
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"id": "59ffb77c-9231-4434-bb60-d032951af589",
+			"key": "APS_ACCESS_TOKEN",
+			"value": "",
+			"type": "default"
+		},
+		{
+			"id": "e7b576e8-0ba8-4850-a3ea-20193ea8a50b",
+			"key": "bifrostVersion",
+			"value": "",
+			"type": "default"
+		},
+		{
+			"id": "a341dc90-097f-41e0-b1f6-f57b9b872fed",
+			"key": "jobId",
+			"value": "",
+			"type": "default"
+		},
+		{
+			"id": "8bd56d23-d176-4819-9cc7-4e826ab4cc09",
+			"key": "storageSpaceId",
+			"value": "scratch:@default",
+			"type": "default"
+		},
+		{
+			"id": "521352fb-66c0-48cd-bd58-d5b5dcf31583",
+			"key": "queueId",
+			"value": "@default",
+			"type": "string"
+		},
+		{
+			"id": "d8ce4400-908c-4d8d-b6af-ad75563d1dca",
+			"key": "inputFileEtag",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"id": "fe49fff7-cb3f-47a2-913f-380b6b27dba5",
+			"key": "amountOfTrees",
+			"value": "",
+			"type": "default"
+		},
+		{
+			"id": "851ef3be-1b9b-4f85-a0c2-85c0e5352f18",
+			"key": "inputFileUrn",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"id": "e0ed88a8-0293-4ace-9681-e3d20b307501",
+			"key": "inputFileUploadUrl",
+			"value": "",
+			"type": "default"
+		},
+		{
+			"id": "584a3d7d-eea6-4db6-8c76-cd7b52a455fc",
+			"key": "inputFileUploadId",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"id": "83e52b34-3d7f-48ed-b34c-561bff6e8a92",
+			"key": "inputFileUploadResourceId",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"id": "fc575e95-041d-41c8-9bbd-35c3ec556874",
+			"key": "inputBifrostGraphUrn",
+			"value": "",
+			"type": "default"
+		},
+		{
+			"id": "4b334c4f-1bd3-4d62-be0a-b4a069e66633",
+			"key": "inputBifrostGraphUploadUrl",
+			"value": "",
+			"type": "default"
+		},
+		{
+			"id": "4db7c0de-c45a-480d-9f5f-0a0acdd71bf4",
+			"key": "inputBifrostGraphUploadResourceId",
+			"value": ""
+		},
+		{
+			"id": "9b891bd2-66bb-48f0-8e90-99287bf362a5",
+			"key": "inputBifrostGraphUploadId",
+			"value": ""
+		},
+		{
+			"id": "ac107126-2d72-43f6-9e8b-439283aca8c4",
+			"key": "inputBifrostGraphEtag",
+			"value": ""
+		},
+		{
+			"id": "6e4921d2-651e-49b5-9dc3-b694485ade1b",
+			"key": "spaceId",
+			"value": "",
+			"type": "default"
+		},
+		{
+			"id": "3e13c936-7144-4626-9387-70765cd43d49",
+			"key": "inputFileResourceId",
+			"value": "",
+			"type": "default"
+		},
+		{
+			"id": "24a9641b-b713-4b08-924e-9fc38db832df",
+			"key": "inputBifrostGraphResourceId",
+			"value": "",
+			"type": "default"
+		},
+		{
+			"id": "3aefd13d-9d05-4441-81aa-d906723dbf6a",
+			"key": "jobName",
+			"value": "",
+			"type": "default"
+		},
+		{
+			"id": "82f17e2d-6873-488c-a10e-6377d46ff7e4",
+			"key": "compoundName",
+			"value": "",
+			"type": "default"
+		},
+		{
+			"id": "a461f803-9c13-4b1d-8852-47b55eac663f",
+			"key": "startFrame",
+			"value": "",
+			"type": "default"
+		},
+		{
+			"id": "49ee466e-6ec6-410a-ba10-1ad7fecfb3fb",
+			"key": "endFrame",
+			"value": "",
+			"type": "default"
+		},
+		{
+			"id": "c07e720f-acdc-48d8-82b4-d9cb0fdb6a7e",
+			"key": "outputName",
+			"value": "",
+			"type": "default"
+		},
+		{
+			"id": "3593c57e-ab14-4234-b48b-ac0cde7a09b5",
+			"key": "inputFilename",
+			"value": "file_cache.####.bob",
+			"type": "default"
+		},
+		{
+			"id": "b9198b55-bb58-4bac-89af-4dba4ba157e5",
+			"key": "outputFileName",
+			"value": "",
+			"type": "default"
+		},
+		{
+			"id": "46b231da-f412-4651-832d-b463ad5ceda9",
+			"key": "inputFileName",
+			"value": "",
+			"type": "default"
+		}
+	]
+}
